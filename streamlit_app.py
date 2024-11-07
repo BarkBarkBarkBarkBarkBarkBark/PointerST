@@ -107,7 +107,7 @@ user_input = st.text_input("Your question")
 
 if user_input:
     with st.spinner("Generating response..."):
-        response = openai.char.completions.create(
+        response = openai.chat.completions.create(
             model="gpt-4",
             messages=[
                 {"role": "user", "content": user_input}
