@@ -1,123 +1,81 @@
 import streamlit as st
-from streamlit_webrtc import webrtc_streamer, WebRtcMode
-import av
-import numpy as np
-import tempfile
-import os
-import openai
+import openai  # Import the openai module
 
-# Initialize OpenAI API key
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+# Import the weaviate_process function
+from weaviate_integration import weaviate_process
 
-# Initialize session state for messages
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+# Set the OpenAI API key
+openai_api_key = st.secrets["OPENAI_API_KEY"]
+openai.api_key = openai_api_key  # Set the API key
 
-# Function to transcribe audio using Whisper API
-def transcribe_audio(file_path):
-    """Transcribes audio using OpenAI's Whisper API."""
-    with open(file_path, "rb") as audio_file:
-        transcript = openai.Audio.transcribe("whisper-1", audio_file)
-    return transcript['text']
+st.title("Pointer")
 
-st.title("Verbal Chat with Whisper and GPT-4")
+# Sidebar for system prompt editing
+st.sidebar.header("Customize the Chatbot's Personality")
 
-webrtc_ctx = webrtc_streamer(
-    key="speech",
-    mode=WebRtcMode.SENDRECV,
-    rtc_configuration={
-        "iceServers": [
-            {
-                "urls": ["stun:stun.l.google.com:19302"]
-            }
-        ]
-    },
-    media_stream_constraints={
-        "audio": True,
-        "video": False
-    },
-    audio_receiver_size=256,
-    async_processing=True,
+default_prompt = (
+    "You are a helpful bot whose job it is to identify the sort of resource that the user might need."
 )
 
-if webrtc_ctx.state.playing:
-    if "audio_frames" not in st.session_state:
-        st.session_state.audio_frames = []
+system_prompt = st.sidebar.text_area("System Prompt:", value=default_prompt, height=300)
 
-    status_indicator = st.empty()
-    record_button = st.button("Start Recording")
-    stop_button = st.button("Stop Recording and Transcribe")
-
-    if record_button:
-        status_indicator.info("Recording... Speak now!")
-        st.session_state.audio_frames = []
-
-    if webrtc_ctx.audio_receiver and st.session_state.audio_frames is not None:
-        try:
-            audio_frame = webrtc_ctx.audio_receiver.get_frame(timeout=1)
-            st.session_state.audio_frames.append(audio_frame.to_ndarray().tobytes())
-        except:
-            pass
-
-    if stop_button and st.session_state.audio_frames:
-        status_indicator.info("Processing audio...")
-        # Process audio frames
-        audio_data = b''.join(st.session_state.audio_frames)
-        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmpfile:
-            tmpfile.write(audio_data)
-            audio_path = tmpfile.name
-        status_indicator.info("Transcribing audio...")
-        # Transcribe using Whisper API
-        transcript = transcribe_audio(audio_path)
-        st.write(f"**You said:** {transcript}")
-
-        # Generate response using OpenAI
-        with st.spinner("Generating response..."):
-            response = openai.chat.completions.create(
-                model="gpt-4",
-                messages=[
-                    {"role": "user", "content": transcript}
-                ]
-            )
-            assistant_message = response.choices[0].message.content
-            st.write(f"**Assistant:** {assistant_message}")
-
-        # Clean up temporary file
-        os.remove(audio_path)
-
-        # Update conversation history
-        st.session_state.messages.append({"role": "user", "content": transcript})
-        st.session_state.messages.append({"role": "assistant", "content": assistant_message})
-
-        # Display conversation history
-        for msg in st.session_state.messages:
-            st.write(f"**{msg['role'].capitalize()}:** {msg['content']}")
-
-        # Reset audio frames
-        st.session_state.audio_frames = []
-
+# Initialize session state for chat history
+if "messages" not in st.session_state or st.sidebar.button("Reset Conversation"):
+    st.session_state.messages = [{"role": "system", "content": system_prompt}]
 else:
-    st.warning("Please allow access to your microphone.")
+    # Update the system prompt if it has changed
+    st.session_state.messages[0]["content"] = system_prompt
 
-# Optional Text Input
-st.write("Or type your question below:")
-user_input = st.text_input("Your question")
+# Display existing chat messages
+for message in st.session_state.messages[1:]:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+# Accept user input using st.chat_input
+user_input = st.chat_input("Type your message here...")
 
 if user_input:
-    with st.spinner("Generating response..."):
-        response = openai.chat.completions.create(
-            model="gpt-4",
-            messages=[
-                {"role": "user", "content": user_input}
-            ]
-        )
-        assistant_message = response.choices[0].message.content
-        st.write(f"**Assistant:** {assistant_message}")
-
-    # Update conversation history
+    # Add user message to history
     st.session_state.messages.append({"role": "user", "content": user_input})
-    st.session_state.messages.append({"role": "assistant", "content": assistant_message})
+    with st.chat_message("user"):
+        st.markdown(user_input)
 
-    # Display conversation history
-    for msg in st.session_state.messages:
-        st.write(f"**{msg['role'].capitalize()}:** {msg['content']}")
+    # Use your existing code to process the input
+    try:
+        # Call the weaviate_process function
+        results = weaviate_process(user_input)
+
+        if isinstance(results, list):
+            import pandas as pd
+            df = pd.DataFrame(results)
+            assistant_message = df.to_markdown(index=False)
+        else:
+            assistant_message = results  # It's an error message
+
+        # When displaying the message
+        with st.chat_message("assistant"):
+            st.markdown(assistant_message)
+
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
+        assistant_message = (
+            "I'm sorry, but I couldn't retrieve information to answer your question."
+        )
+
+        # Add assistant message to history
+        st.session_state.messages.append({"role": "assistant", "content": assistant_message})
+
+        # Display assistant message
+        with st.chat_message("assistant"):
+            st.markdown(assistant_message)
+
+# Sidebar instructions
+st.sidebar.markdown("---")
+st.sidebar.markdown("### Instructions:")
+st.sidebar.markdown(
+    """
+1. **Edit the System Prompt** to customize the bot's personality.
+2. **Type your message** in the chat input box below.
+3. **Reset Conversation** to start over.
+"""
+)
