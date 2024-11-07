@@ -53,7 +53,7 @@ if user_input:
             introduction_prompt = (
                 f"{system_prompt}\n\n"
                 f"User query: {user_input}\n"
-                f"Based on the above query, provide a brief introduction or helpful remark."
+                f"Based on the above query, provide a brief greeting, do not elaborate or suggest anything."
             )
 
             # Call OpenAI API to generate the introduction
@@ -65,7 +65,7 @@ if user_input:
                     {"role": "assistant", "content": introduction_prompt}
                 ],
                 max_tokens=50,
-                temperature=0.7,
+                temperature=0.2,
             )
             introduction = response.choices[0].message.content.strip()
 
