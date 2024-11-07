@@ -75,7 +75,7 @@ if webrtc_ctx.state.playing:
 
         # Generate response using OpenAI
         with st.spinner("Generating response..."):
-            response = openai.ChatCompletion.create(
+            response = openai.chat.completions.create(
                 model="gpt-4",
                 messages=[
                     {"role": "user", "content": transcript}
