@@ -5,3 +5,4 @@ python-dotenv
 tabulate
 scipy
 sounddevice
+streamlit_webrtc
