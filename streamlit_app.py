@@ -8,7 +8,7 @@ from weaviate_integration import weaviate_process
 openai_api_key = st.secrets["OPENAI_API_KEY"]
 openai.api_key = openai_api_key  # Set the API key
 
-st.title("Pointer")
+st.title("BOINKBOT")
 
 # Sidebar for system prompt editing
 st.sidebar.header("Customize the Chatbot's Personality")
@@ -16,7 +16,6 @@ st.sidebar.header("Customize the Chatbot's Personality")
 default_prompt = (
     "You are a helpful bot whose job it is to identify the sort of resource that the user might need."
 )
-
 system_prompt = st.sidebar.text_area("System Prompt:", value=default_prompt, height=300)
 
 # Initialize session state for chat history
@@ -48,7 +47,32 @@ if user_input:
         if isinstance(results, list):
             import pandas as pd
             df = pd.DataFrame(results)
-            assistant_message = df.to_markdown(index=False)
+
+            # Generate a generative touch using OpenAI
+            # Prepare the prompt for OpenAI
+            introduction_prompt = (
+                f"{system_prompt}\n\n"
+                f"User query: {user_input}\n"
+                f"Based on the above query, provide a brief introduction or helpful remark."
+            )
+
+            # Call OpenAI API to generate the introduction
+            response = openai.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_input},
+                    {"role": "assistant", "content": introduction_prompt}
+                ],
+                max_tokens=50,
+                temperature=0.7,
+            )
+            introduction = response.choices[0].message.content.strip()
+
+            assistant_message = introduction + "\n\n"
+
+            # Convert DataFrame to Markdown
+            assistant_message += df.to_markdown(index=False)
         else:
             assistant_message = results  # It's an error message
 
@@ -68,6 +92,9 @@ if user_input:
         # Display assistant message
         with st.chat_message("assistant"):
             st.markdown(assistant_message)
+
+    # Add assistant message to history
+    st.session_state.messages.append({"role": "assistant", "content": assistant_message})
 
 # Sidebar instructions
 st.sidebar.markdown("---")
