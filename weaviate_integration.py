@@ -16,11 +16,7 @@ def weaviate_process(user_query):
     import weaviate
     from weaviate.classes.init import Auth
 
-    # Connect to Weaviate Cloud
-    client = weaviate.connect_to_weaviate_cloud(
-        cluster_url=wcd_url,
-        auth_credentials=Auth.api_key(wcd_api_key),
-    )
+
 
     # Establish the Weaviate client connection
     client = weaviate.connect_to_weaviate_cloud(
