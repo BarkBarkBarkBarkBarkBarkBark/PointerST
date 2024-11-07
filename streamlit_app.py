@@ -51,13 +51,29 @@ if user_input:
         # Call the weaviate_process function
         results = weaviate_process(user_input)
 
-        # Format the results for display
+
+# Format the results for display
         if isinstance(results, list):
             assistant_message = ""
             for res in results:
-                assistant_message += f"{res}\n\n"
+                assistant_message += f"**Agency:** {res.get('agency', 'N/A')}\n"
+                assistant_message += f"**Description:** {res.get('description', 'N/A')}\n"
+                assistant_message += f"**Address:** {res.get('address', 'N/A')}\n"
+                assistant_message += f"**Phone Number:** {res.get('phone_number', 'N/A')}\n"
+                assistant_message += "---\n"  # Add a separator between entries
         else:
             assistant_message = results  # It's an error message
+
+
+
+
+        # Format the results for display
+#        if isinstance(results, list):
+#            assistant_message = ""
+##            for res in results:
+#                assistant_message += f"{res}\n\n"
+#        else:
+#            assistant_message = results  # It's an error message
 
     except Exception as e:
         st.error(f"An error occurred: {e}")
