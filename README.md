@@ -1,6 +1,18 @@
 # 🎈 Pointer
 
-to host on your machine, instead of streamlit, create .streamlit/secrets.toml
+Pointer is an agentic database selector. 
+
+The Pointer database is a table of objects containing collection names, descriptions, and few shot examples.
+
+A near text query of the Pointer database directory indicates the correct database, and passes the querey.
+
+In this case, there 6 databases, doctor, therapist, medical clinic, mental health clinic, providers, and general resources.
+
+a near text querey of the pointer database returns the collection name, which is passed to the next call.
+
+
+
+to host on your machine, instead of streamlit, create .streamlit/secrets.toml using template included in repo
 
 WEAVIATE_URL = "asdfaqsdgaf" - find the weaviate keys in Confluence
 
