@@ -42,14 +42,20 @@ def weaviate_process(user_query):
         if database_name:
             next_query_response = client.collections.get(database_name).query.near_text(
                 query=user_query,  # Use the same user query
-                limit=5
+                limit=20
             )
             
             # Collect the properties of each object
             results = []
-            for obj in next_query_response.objects[:5]:
+
+            
+            for obj in next_query_response.objects[:20]:
                 results.append(obj.properties)
             
+            import random
+            random.shuffle(results)
+            results = results[:20]
+
             return results
         else:
             return ["Database name not found in the response."]
