@@ -4,9 +4,15 @@ Pointer is an agentic database selector.
 
 The Pointer database is a table of objects containing collection names, descriptions, and few shot examples.
 
-A near text query of the Pointer database directory indicates the correct database, and passes the querey.
 
-In this case, there 6 databases, doctor, therapist, medical clinic, mental health clinic, providers, and general resources.
+
+In this case, there 6 databases;
+   doctor, 
+   therapist, 
+   medical clinic, 
+   mental health clinic, 
+   providers, 
+   general resources
 
 a near text querey of the pointer database returns the collection name, which is passed to the next call.
 
