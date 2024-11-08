@@ -1,8 +1,10 @@
-# 🎈 Blank app template
+# 🎈 Pointer
 
-A simple Streamlit app template for you to modify!
+to host on your machine, instead of streamlit, create .streamlit/secrets.toml
 
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://blank-app-template.streamlit.app/)
+WEAVIATE_URL = "asdfaqsdgaf" - find the weaviate keys in Confluence
+WEAVIATE_API_KEY = "asdadzf" - find the weaviate keys in Confluence
+OPENAI_API_KEY = "ASFSFGCE" - use your own or text me
 
 ### How to run it on your own machine
 
